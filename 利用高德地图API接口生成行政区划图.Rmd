@@ -1,0 +1,34 @@
+---
+title: "利用高德地图API生成行政区划图"
+author: "周强"
+date: "2018年3月15日"
+output: html_document
+   
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 介绍
+
+利用GIS数据开展各种分析或制图时，准确的行政区划底图往往是不可或缺的。但由于我国目前行政区划调整仍然比较频繁，互联网上的免费资源通常比较陈旧，仅仅做个伸手党就会面对现实一筹莫展。好在高德地图提供了行政区划查询的API[接口](http://lbs.amap.com/api/webservice/guide/api/district/)，可以通过这个接口查询我国各级行政区的行政区划地理空间信息，并利用返回的点坐标生成各级行政区划图。这样就可以利用高德地图的数据生产比较新的行政区划图了。
+
+## API接口介绍
+当然最详细的要去看这里
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
