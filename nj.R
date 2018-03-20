@@ -23,37 +23,37 @@ get_location<- function(address){
   city<-GET(url)%>% content(as="text",encoding="UTF-8") %>% fromJSON(flatten = TRUE)
   return(city)
 }
-nj<-get_location('ÄÏ¾©')[[6]]
+nj<-get_location('?Ï¾?')[[6]]
 nj_district<-nj$districts[[1]]
 district_adcode<-nj_district$adcode
 district_info<-nj_district$districts
 names(district_info)<-nj_district$name
-#ÌáÈ¡ÕòÃû£¨name)¡¢ÕòÖĞĞÄ×ø±ê£¨center)¡¢ĞĞÕş¼¶±ğ£¨level£©Èı¸öÖ¸±êÉú³ÉÕòÖĞĞÄĞÅÏ¢Êı¾İ¿ò¡£
+#??È¡??????name)???????????ê£¨center)????????????level??????Ö¸??????????????Ï¢???İ¿???
 town_center <- district_info%>% lapply(select,name,center,level) %>% list.rbind
 town_center$district<-row.names(town_center)
-#ÖÆ×÷¸÷ÇøĞĞÕşÇø»®Í¼£¬
-#1¡¢ÌáÈ¡ĞĞÕşÇø»®±ß½ç¼°ÖĞĞÄ×ø±êµãĞÅÏ¢
+#????????????????Í¼??
+#1????È¡?????????ß½ç¼°????????????Ï¢
 
 district_frame<- lapply(district_adcode,get_location) %>% list.map(districts)
 names(district_frame)<-nj_district$name
 district_center<-district_frame%>% lapply(select,adcode,name,center,level) %>% list.rbind
 
-#2. ÌáÈ¡Level-0¼¶ĞĞÕşÇøĞĞÕşÇø»®±ß½çµã×ø±êĞÅÏ¢²¢×ª»»³ÉÃæ¶ÔÏó
-nj<-get_location('ÄÏ¾©')  %>% '[['(6) %>% select(-districts)
+#2. ??È¡Level-0?????????????????ß½?????????Ï¢??×ª??????????
+nj<-get_location('?Ï¾?')  %>% '[['(6) %>% select(-districts)
 
 nj$polyline<-nj$polyline %>% str_split('\\|') %>% lapply(str_split,';')  %>%'[['(1)%>%
           lapply(lapply,str_split,',')%>%
           lapply(lapply,lapply,as.numeric)%>% lapply(list.rbind)  %>% lapply(list.rbind)%>%
-          lapply(gcj02_wgs84_matrix_matrix) %>% lapply(list)%>% #  ÓÉGCJ02×ø±êÏµ×ª»»ÎªWGS84×ø±êÏµ
-          st_multipolygon %>%                                  #¶¨ÒåÎªsfÀàÖĞµÄ¸´¶à±ßĞÎ£¨multipolygon)¶ÔÏó
-          st_sfc(crs=4326)                                     #½«¸ÃÁĞ¶¨ÒåÎªsfcÁĞ£¬²¢½«Í¶Ó°×ø±êÏµÊôĞÔÉè¶¨ÎªWGS84Í¶Ó°
-nj.sf<-st_sf(nj)                                               #½«Õû¸öÊı¾İ¿ò¶¨ÒåÎªst¶ÔÏó
+          lapply(gcj02_wgs84_matrix_matrix) %>% lapply(list)%>% #  ??GCJ02????Ïµ×ª??ÎªWGS84????Ïµ
+          st_multipolygon %>%                                  #????Îªsf???ĞµÄ¸??????Î£?multipolygon)????
+          st_sfc(crs=4326)                                     #?????Ğ¶???Îªsfc?Ğ£?????Í¶Ó°????Ïµ?????è¶¨ÎªWGS84Í¶Ó°
+nj.sf<-st_sf(nj)                                               #?????????İ¿?????Îªst????
 nj.sf$center<-nj.sf$center %>% str_split(',')  %>% lapply(as.numeric)
 nj.sf$center_wgs84_lng<-gcj02_wgs84_lng(nj.sf$center[[1]][1],nj.sf$center[[1]][2])
 nj.sf$center_wgs84_lat<-gcj02_wgs84_lat(nj.sf$center[[1]][1],nj.sf$center[[1]][2])
 
-#3. ÌáÈ¡Level-1¼¶ĞĞÕşÇøÇø»®±ß½çµã×ø±êĞÅÏ¢²¢×ª»»³ÉÃæ¶ÔÏó
-nj_district<-get_location('ÄÏ¾©') %>% '[['('districts') %>% '[['('districts') %>% '[['(1)
+#3. ??È¡Level-1?????????????ß½?????????Ï¢??×ª??????????
+nj_district<-get_location('å—äº¬') %>% '[['('districts') %>% '[['('districts') %>% '[['(1)
 district_poly <-lapply(nj_district$adcode,get_location) %>% list.map(districts) %>% lapply(select,polyline)
 names(district_poly) <-nj_district$name
 nj_district$poly<-district_poly %>% lapply(str_split,'\\|') %>% lapply(lapply,str_split,';') %>% lapply('[[',1)%>%
@@ -62,7 +62,7 @@ nj_district$poly<-district_poly %>% lapply(str_split,'\\|') %>% lapply(lapply,st
       lapply(st_multipolygon) %>% st_sfc(crs=4326)
 nj_district.sf<-st_sf(nj_district)
 
-#4. ÌáÈ¡Level-2¼¶ĞĞÕşÇøµØÀíĞÅÏ¢
+#4. ??È¡Level-2??????????????Ï¢
 nj_town<-nj_district %>% select(districts) %>% '[['(1) %>% lapply(select,-districts) %>% list.rbind
 center<-nj_town$center %>% str_split(',')  %>% lapply(as.numeric)  %>% list.apply(rbind)%>%
                 lapply(unlist) %>% list.rbind %>% gcj02_wgs84_matrix_df
@@ -74,6 +74,3 @@ ggplot()+geom_sf(data=nj_town.sf)
 setwd('F:/Administrator/Documents/R/Mapproject/JSframe/njframe')
 saveRDS(nj_district.sf,'nj_district_sf.rds')
 saveRDS(nj_town.sf,'nj_town_sf.rds')
-#3. ×ª»»×ø±êÏµ
-
-#4.
