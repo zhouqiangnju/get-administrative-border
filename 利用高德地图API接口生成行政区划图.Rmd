@@ -10,15 +10,69 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 介绍
+### 介绍
 
-利用GIS数据开展各种分析或制图时，准确的行政区划底图往往是不可或缺的。但由于我国目前行政区划（特别是区县级）调整比较频繁，互联网上的免费资源通常比较陈旧，只用这样的底图往往就不能准确反映现实情况了。好在高德地图提供了行政区划查询的API[接口](http://lbs.amap.com/api/webservice/guide/api/district/)，可以通过这个接口查询我国各级行政区的行政区划地理空间信息，并利用返回的点坐标生成各级行政区划图。这样就可以利用高德地图的数据生产比较新的行政区划图了，而且高德声称数据是按小时更新的。惊喜不惊喜，意外不意外？废话不多说，下面我们就用R语言来即时生成行政区划底图吧。
+在利用地图开展各种分析或制图时，准确的行政区划底图往往是不可或缺的。但由于我国目前行政区划（特别是区县级）调整比较频繁，互联网上的免费资源通常比较陈旧，只用这样的底图往往就不能准确反映现实情况了。好在高德地图提供了行政区域查询的WEB服务API[接口](http://lbs.amap.com/api/webservice/guide/api/district/)，可以通过这个接口查询我国各级行政区的行政区划地理空间信息，并利用返回的点坐标生成各级行政区划图。这样就可以利用高德地图的数据生产比较新的行政区划图了，而且高德说是“**唯一能让用户查询到乡镇/街道级别信息且小时级更新数据的公开API**”。惊喜不惊喜，意外不意外？废话不多说，下面我们就用R语言来即时生成行政区划底图吧。
 
-## 抓取API信息
+### 抓取信息
 
-```{r, echo=FALSE,}
-library('httr','jsonlite')
+```{r pack1,message=FALSE,warning=FALSE}
+library('httr')
+library('jsonlite')
 library('tidyverse')
 ```
+这部分需要的是以上几个包。
+```{r get_location,echo=TRUE}
+options(digits=11)
+get_location<- function(address){
+  key = '7c6b6c0d1b641f4aa9cdb7d2229ae728'                            #需要预先申请一个高德API的key
+  url = 'http://restapi.amap.com/v3/config/district?' %>%
+        paste('keywords=' , address ,
+              '&key=' ,key ,
+              '&subdistrict=1' ,                                      #返回指定行政区下级的行政区信息,
+                                                                      #最多可以返回三级
+              '&extensions=all',
+               sep = '')
+  geoinfo<-GET(url)%>% content(as="text",encoding="UTF-8") %>% 
+        fromJSON(flatten = TRUE)                                      #返回信息的类型是可以选择的                    
+  return(geoinfo)
+}
+```
+根据高德的官方指南，就可以编写这么一个小小的爬虫来抓取相应行政区的信息了，所以还是要认真的阅读一下高德的指南。这个爬虫就只需要一个参数*address*，支持中文地名，也支持数字形式的区域编码（adcode）。用中文地名查询时到了市、县这个层级就有可能碰到多义性的问题了，也就是一个关键字对应多个区域的情况，高德建议大家尽量使用adcode，可以在[这里](http://lbs.amap.com/api/webservice/download)下载。不过由于返回的信息里包括了下级行政区域的信息，我们可以通过上级行政区域获得所有下级行政区域的adcode，非常简单，我在后面也是用这个机制直接抓取指定行政区里所有下级行政区的adcode。值得一提的是预定设定小数点位数`options(digits=11)`。由于地理坐标小数点后的位数比较多，如果不预先指定小数点位数的话，按照R默认的精度就会出现显示不完整的情况。下面，我们赶紧来拿浙江做个例子吧。
+```{r get_add,cache=TRUE}
+zj<-get_location('浙江省') %>% '[['('districts')
 
+```
+返回的信息是一个包含了六个元素的列表，这个列表的*districts*元素包含了我所需要的所有信息，所以这里就直接一步提取出来了，有兴趣的小伙伴可以自己查看返回列表的信息。下面我们就来看看这个*districts*元素长什么样子吧。
+```{r str_add,echo=FALSE,dependson='get_add'}
+str(zj)
+```
+为了比较清晰的展示数据结构，我选择只返回了下一级行政区的信息（`subdistrict=1`），也就是浙江的地级市信息。在实际中我设定`subdistrict=3`，可以一步返回浙江所有镇的信息。
+*polyline*这个元素里就是我们要找的行政区边界上的坐标点的信息，目前是一个很长的字符串，后面主要的工作其实就是分割——转换类型——转换坐标系——生成地理空间对象，然后就可以作图啦。下面，我们就来处理浙江省的边界。
 
+### 清洗、转换
+```{r str_zj$polyline,echo=FALSE}
+str(zj$polyline)
+```
+老规矩，先来看看*polyline*的结构。类型，字符串型（chr)；坐标是以经纬度的形式记录的，经纬度之间用**"，"**分隔，而每对坐标之间用**"；"**分隔。在后面，我们还看到了一个分隔符号**"|"**，这是什么意思呢？这表示着行政区并非只包括一个多边形。由于岛屿、飞地等类型的行政区，一个省的行政区可能会包括很多的独立多边形。每一个多边形之间都是用**"|"**来分隔。了解清楚了数据结构，就可以开始进行分割和转换了。下面给出代码。
+```{r tidy,dependson='get_add',message=FALSE,warning=FALSE,cache=TRUE}
+library('rlist')
+library('Rgctc2',lib.loc='C:/Users/zhouq/Documents/GitHub/R_coordination_transformation')
+library('sf')
+
+zj$polyline<-zj$polyline %>% 
+             str_split('\\|') %>% 
+             lapply(str_split,';') %>% 
+             '[['(1)%>% lapply(str_split,',') %>%                      
+             lapply(lapply,as.numeric) %>% 
+             lapply(list.rbind)%>%
+             lapply(gcj02_wgs84_matrix_matrix) %>% 
+             lapply(list) %>% 
+             st_multipolygon %>% st_sfc(crs=4326)
+zj_sf<-st_sf(zj)
+```
+这里加载的三个包都值得一提，*rlist*是R语言里对list对象进行操作的神器。由于list对象的非结构性，并且可以多层嵌套，所以一个字符串经过多次分割后就形成了有三四个层次深度嵌套的list对象，后面的工作无论是数据类型转换还是坐标系的转换都涉及到对list对象的深层操作。我基本上用的是`base`包里的`lapply`函数嵌套以应对，但是也少不了要借助`rlist`包里很多函数。这段最后的代码里真正属于`rlist`包的函数实际上只有`list.rbind`一个了，但是实际上在调试的过程中我借助了很多这个包里的函数进行debug。*Rgctc2*是用于对list对象的操作就是
+
+```{r ggplot_zj,fig.cap='浙江省行政区图'}
+library(ggplot2)
+ggplot()+geom_sf(data=zj_sf)
