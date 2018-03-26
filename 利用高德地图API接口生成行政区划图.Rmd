@@ -63,16 +63,56 @@ library('sf')
 zj$polyline<-zj$polyline %>% 
              str_split('\\|') %>% 
              lapply(str_split,';') %>% 
-             '[['(1)%>% lapply(str_split,',') %>%                      
-             lapply(lapply,as.numeric) %>% 
-             lapply(list.rbind)%>%
-             lapply(gcj02_wgs84_matrix_matrix) %>% 
+             '[['(1)%>% lapply(str_split,',') %>%     #以上对字符串进行分隔，得到一个多层嵌套的列表            
+             lapply(lapply,as.numeric) %>%      
+             lapply(list.rbind)%>%                    #转换数据类型，并合并行，形成若干矩阵。
+  
+             lapply(gcj02_wgs84_matrix_matrix) %>%    #转换投影坐标系
+  
              lapply(list) %>% 
-             st_multipolygon %>% st_sfc(crs=4326)
-zj_sf<-st_sf(zj)
+             st_multipolygon %>% st_sfc(crs=4326)     #将polyline列定义为sfc属性
+zj_sf<-st_sf(zj)                                      #将整个zj数据框定义为sf对象
 ```
-这里加载的三个包都值得一提，*rlist*是R语言里对list对象进行操作的神器。由于list对象的非结构性，并且可以多层嵌套，所以一个字符串经过多次分割后就形成了有三四个层次深度嵌套的list对象，后面的工作无论是数据类型转换还是坐标系的转换都涉及到对list对象的深层操作。我基本上用的是`base`包里的`lapply`函数嵌套以应对，但是也少不了要借助`rlist`包里很多函数。这段最后的代码里真正属于`rlist`包的函数实际上只有`list.rbind`一个了，但是实际上在调试的过程中我借助了很多这个包里的函数进行debug。*Rgctc2*是用于对list对象的操作就是
-
+这里加载的三个包都值得一提，**rlist**是R语言里对list对象进行操作的神器。由于list对象的非结构性，并且可以多层嵌套，所以一个字符串经过多次分割后就形成了有三四个层次深度嵌套的list对象，后面的工作无论是数据类型转换还是坐标系的转换都涉及到对list对象的深层操作。我基本上用的是**base**包里的`lapply`函数嵌套以应对，但是也少不了要借助**rlist**包里很多函数。这段最后的代码里真正属于**rlist**包的函数实际上只有`list.rbind`一个了，但是实际上在调试的过程中我借助了很多这个包里的函数进行debug。如果对抓取网络地理信息数据有兴趣的话，应该都是要对抓下来的数据首先进行一番这样的操作的。
+**Rgctc2**包是用来转换投影坐标系的。出于保密的需要，高德、百度提供的坐标信息都是经过转换加密的，一般转换成wgs84投影坐标系通用性会更好。这种转换网上有各种语言的源代码也有各种小工具，但是目前R语言里好像还没有专门用于这个转换的包。于是我就自己简单写了一个包，可以在[这里](https://github.com/zhouqiangnju/R_coordination_transformation)下载。这个包功能很简单，目前就只能从高德转换到WGS84（完整的功能应该能实现高德、百度、WGS84中任意两种坐标系互转，而且在R中要用的方便话还要考虑各种数据类型的输入输出，所以还是个蛮大的工程，如果后面有兴趣就慢慢完善吧。因为不会，所以还没有搞帮助文档。）`gcj02`就是高德采用的坐标系，`wgs84`是我们要转换成的通用坐标系,`matrix_matrix`分别是输入和输出的数据类型。这个包里所有的函数基本上都是这个命名规则。
+**sf**包则是R里用来生成地理空间对象的包，是**sp**包的升级换代。相比于传统的**sp**包属性层和地理空间信息层分隔的复杂存储方法，**sf**包就是基于数据框的，非常便于在R语言中进行操作，也是更加主流的GIS数据存储方式。由于目前得到了ggplot2的支持，专门加了一个对象`geom_sf`用于**sf**对象的作图，所以目前看来前途非常光明啊。
+这里可以再看一下zj这个数据框，实际上只要把*polyline*这一列转换成**sf**对象必需的*sfc*列（也就是专门用于存储地理空间信息的列），整个zj数据框就可以定位为**sf**对象了，非常方便。`st_sfc(crs=4326)`这个命令就是用来转换*polyline*列的。转换完成后我们再看*polyline*列的属性
+```{r polyline_attributes,echo=FALSE}
+attributes(zj$polyline)
+```
+可以看到，已经附加了很多地理空间信息。
+不方便的地方在于，不同的地理空间对象类型（就是点、线面）所对应的*sfc*列对数据格式的要求不同而且比较严格，比如说我这里所采用的*multipolygon*这个对象，他只接受*list(list(matrix),list(matirx),......)*这种格式的数据,而这里的*matrix*是由坐标对构成的矩阵，所以也就是*matrix(c(lng1,lat2),c(lng2,lat3).....)*，是一个一维的矩阵，在R里面生成这样一个矩阵还是有点技巧的（基于列表的建议用`list.rbind`，基于数据框也就是两列经纬度数据的下面再说）。所以上手这个包还是有点门槛的，需要一定时间来熟悉。
+###成图
+最艰难的阶段已经过去啦，下面就是愉快的画图啦。加载**ggplot2**，一行命令就出图。
 ```{r ggplot_zj,fig.cap='浙江省行政区图'}
 library(ggplot2)
 ggplot()+geom_sf(data=zj_sf)
+```
+###延伸
+通过以上的方法，我们可以一个行政区一个行政区的得到他们的边框，然后通过`rbind`得到更大区域的图了。然而，这样的方式是太low了。我们要充分利用R语言里的`apply`函数家族，一下子得到浙江省所有地级市的行政区图。直接上代码。
+```{r,echo=TRUE,message=FALSE}
+library(tidyverse)
+library(sf)
+library(rlist)
+library(httr)
+library(jsonlite)
+library(Rgctc2)
+zj_city<-zj %>% "["('districts') %>% '[['(1) %>% '[['(1) 
+
+zj_city<-lapply(zj_city$adcode,get_location)  %>%
+         list.map(districts) %>% 
+         lapply(select,-districts) %>% 
+         list.rbind
+zj_city$polyline<-zj_city$polyline %>% 
+                  str_split('\\|') %>% 
+                  lapply(str_split,';') %>% 
+                  lapply(lapply,str_split,',') %>%
+                  lapply(lapply,lapply,as.numeric) %>% 
+                  lapply(lapply,list.rbind) %>%
+                  lapply(lapply,gcj02_wgs84_matrix_matrix) %>% 
+                  lapply(lapply,list) %>%
+                  lapply(st_multipolygon) %>%st_sfc(crs=4326)
+
+zj_city<-st_sf(zj_city)
+
+```
