@@ -2,7 +2,8 @@ library(tidyverse)
 library(rlist)
 library(Rgctc2,lib.loc='~/GitHub/R_coordination_transformation')
 library(sf)
-library('httr','jsonlite')
+library('httr')
+library('jsonlite')
 
 
 setwd('F:/Administrator/Documents/R/Mapproject/JSframe')
@@ -18,7 +19,10 @@ get_location<- function(address){
   city<-GET(url)%>% content(as="text",encoding="UTF-8") %>% fromJSON(flatten = TRUE)
   return(city)
 }
-sh<-get_location('310000')[['districts']]
+zj<-get_location('�㽭ʡ')[['districts']]  %>% '['('districts') %>% '[['(1) %>% '[['(1)
+city_center <-zj$center %>% str_split(';') %>% lapply(str_split,',') %>% lapply(lapply,as.numeric) %>% 
+         lapply(list.rbind) %>% list.rbind %>% gcj02_wgs84_matrix_df
+
 sh<-get_location(310000) %>% '[['('districts')
 regulartable(sh,col_keys = names(sh))
 str(sh)

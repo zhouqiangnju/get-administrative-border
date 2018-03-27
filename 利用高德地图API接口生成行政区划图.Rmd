@@ -1,13 +1,14 @@
 ---
-title: "利用高德地图API生成行政区划图"
-author: "周强"
-date: "2018年3月15日"
-output: html_document
-   
+title: "鍒╃敤楂樺痉鍦板浘API鐢熸垚琛屾斂鍖哄垝鍥<be>"
+author: "鍛ㄥ己"
+date: "2018骞<b4>3鏈<88>15鏃<a5>"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,fig.align = 'center')
 ```
 
 ### 介绍
@@ -20,8 +21,12 @@ knitr::opts_chunk$set(echo = TRUE)
 library('httr')
 library('jsonlite')
 library('tidyverse')
+library('rlist')
+library('Rgctc2',lib.loc='~/GitHub/R_coordination_transformation')
+library('sf')
+
 ```
-这部分需要的是以上几个包。
+首先自然是写抓取信息的函数，利用高德的官方指南很容易搞定。
 ```{r get_location,echo=TRUE}
 options(digits=11)
 get_location<- function(address){
@@ -29,8 +34,7 @@ get_location<- function(address){
   url = 'http://restapi.amap.com/v3/config/district?' %>%
         paste('keywords=' , address ,
               '&key=' ,key ,
-              '&subdistrict=1' ,                                      #返回指定行政区下级的行政区信息,
-                                                                      #最多可以返回三级
+              '&subdistrict=1' ,                                      #可以指定返回行政区的层级
               '&extensions=all',
                sep = '')
   geoinfo<-GET(url)%>% content(as="text",encoding="UTF-8") %>% 
@@ -38,9 +42,9 @@ get_location<- function(address){
   return(geoinfo)
 }
 ```
-根据高德的官方指南，就可以编写这么一个小小的爬虫来抓取相应行政区的信息了，所以还是要认真的阅读一下高德的指南。这个爬虫就只需要一个参数*address*，支持中文地名，也支持数字形式的区域编码（adcode）。用中文地名查询时到了市、县这个层级就有可能碰到多义性的问题了，也就是一个关键字对应多个区域的情况，高德建议大家尽量使用adcode，可以在[这里](http://lbs.amap.com/api/webservice/download)下载。不过由于返回的信息里包括了下级行政区域的信息，我们可以通过上级行政区域获得所有下级行政区域的adcode，非常简单，我在后面也是用这个机制直接抓取指定行政区里所有下级行政区的adcode。值得一提的是预定设定小数点位数`options(digits=11)`。由于地理坐标小数点后的位数比较多，如果不预先指定小数点位数的话，按照R默认的精度就会出现显示不完整的情况。下面，我们赶紧来拿浙江做个例子吧。
+这个爬虫就只需要一个参数*address*，支持中文地名，也支持数字形式的区域编码（adcode）。用中文地名查询时到了市、县这个层级就有可能碰到多义性的问题了，也就是一个关键字对应多个区域的情况，高德建议大家尽量使用adcode，可以在[这里](http://lbs.amap.com/api/webservice/download)下载。我们可以通过上级行政区域获得所有下级行政区域的adcode，非常简单，可以用这个机制直接抓取指定行政区里所有下级行政区的adcode。值得一提的是预定设定小数点位数`options(digits=11)`。由于地理坐标小数点后的位数比较多，如果不预先指定小数点位数的话，按照R默认的精度就会出现显示不完整的情况。下面，我们赶紧来拿浙江做个例子吧。
 ```{r get_add,cache=TRUE}
-zj<-get_location('浙江省') %>% '[['('districts')
+   zj<-get_location('浙江省') %>% '[['('districts')
 
 ```
 返回的信息是一个包含了六个元素的列表，这个列表的*districts*元素包含了我所需要的所有信息，所以这里就直接一步提取出来了，有兴趣的小伙伴可以自己查看返回列表的信息。下面我们就来看看这个*districts*元素长什么样子吧。
@@ -55,11 +59,7 @@ str(zj)
 str(zj$polyline)
 ```
 老规矩，先来看看*polyline*的结构。类型，字符串型（chr)；坐标是以经纬度的形式记录的，经纬度之间用**"，"**分隔，而每对坐标之间用**"；"**分隔。在后面，我们还看到了一个分隔符号**"|"**，这是什么意思呢？这表示着行政区并非只包括一个多边形。由于岛屿、飞地等类型的行政区，一个省的行政区可能会包括很多的独立多边形。每一个多边形之间都是用**"|"**来分隔。了解清楚了数据结构，就可以开始进行分割和转换了。下面给出代码。
-```{r tidy,dependson='get_add',message=FALSE,warning=FALSE,cache=TRUE}
-library('rlist')
-library('Rgctc2',lib.loc='C:/Users/zhouq/Documents/GitHub/R_coordination_transformation')
-library('sf')
-
+```{r get_province_border,dependson='get_add',message=FALSE,warning=FALSE,cache=TRUE}
 zj$polyline<-zj$polyline %>% 
              str_split('\\|') %>% 
              lapply(str_split,';') %>% 
@@ -73,15 +73,20 @@ zj$polyline<-zj$polyline %>%
              st_multipolygon %>% st_sfc(crs=4326)     #将polyline列定义为sfc属性
 zj_sf<-st_sf(zj)                                      #将整个zj数据框定义为sf对象
 ```
-这里加载的三个包都值得一提，**rlist**是R语言里对list对象进行操作的神器。由于list对象的非结构性，并且可以多层嵌套，所以一个字符串经过多次分割后就形成了有三四个层次深度嵌套的list对象，后面的工作无论是数据类型转换还是坐标系的转换都涉及到对list对象的深层操作。我基本上用的是**base**包里的`lapply`函数嵌套以应对，但是也少不了要借助**rlist**包里很多函数。这段最后的代码里真正属于**rlist**包的函数实际上只有`list.rbind`一个了，但是实际上在调试的过程中我借助了很多这个包里的函数进行debug。如果对抓取网络地理信息数据有兴趣的话，应该都是要对抓下来的数据首先进行一番这样的操作的。
-**Rgctc2**包是用来转换投影坐标系的。出于保密的需要，高德、百度提供的坐标信息都是经过转换加密的，一般转换成wgs84投影坐标系通用性会更好。这种转换网上有各种语言的源代码也有各种小工具，但是目前R语言里好像还没有专门用于这个转换的包。于是我就自己简单写了一个包，可以在[这里](https://github.com/zhouqiangnju/R_coordination_transformation)下载。这个包功能很简单，目前就只能从高德转换到WGS84（完整的功能应该能实现高德、百度、WGS84中任意两种坐标系互转，而且在R中要用的方便话还要考虑各种数据类型的输入输出，所以还是个蛮大的工程，如果后面有兴趣就慢慢完善吧。因为不会，所以还没有搞帮助文档。）`gcj02`就是高德采用的坐标系，`wgs84`是我们要转换成的通用坐标系,`matrix_matrix`分别是输入和输出的数据类型。这个包里所有的函数基本上都是这个命名规则。
-**sf**包则是R里用来生成地理空间对象的包，是**sp**包的升级换代。相比于传统的**sp**包属性层和地理空间信息层分隔的复杂存储方法，**sf**包就是基于数据框的，非常便于在R语言中进行操作，也是更加主流的GIS数据存储方式。由于目前得到了ggplot2的支持，专门加了一个对象`geom_sf`用于**sf**对象的作图，所以目前看来前途非常光明啊。
+这里要跳到开头讲一下三个包：
+
+*  列表操作**rlist**包。这是R语言里对list对象进行操作的神器。由于list对象的非结构性，并且可以多层嵌套，所以一个字符串经过多次分割后就形成了有三四个层次深度嵌套的list对象，后面的工作无论是数据类型转换还是坐标系的转换都涉及到对list对象的深层操作。我基本上用的是**base**包里的`lapply`函数嵌套以应对，但是也少不了要借助**rlis t**包里很多函数。这段最后的代码里真正属于**rlist**包的函数实际上只有`list.rbind`一个了，但是实际上在调试的过程中我借助了很多这个包里的函数进行debug。如果对抓取网络地理信息数据有兴趣的话，应该都是要对抓下来的数据首先进行一番这样的操作的。
+
+*  地理坐标转换**Rgctc2**包。出于保密的需要，高德、百度提供的坐标信息都是经过转换加密的，一般转换成wgs84投影坐标系通用性会更好。这种转换网上有各种语言的源代码也有各种小工具，但是目前R语言里好像还没有专门用于这个转换的包。于是我就自己简单写了一个包，可以在[这里](https://github.com/zhouqiangnju/R_coordination_transformation)下载。这个包功能很简单，目前就只能从高德转换到WGS84（完整的功能应该能实现高德、百度、WGS84中任意两种坐标系互转，而且在R中要用的方便话还要考虑各种数据类型的输入输出，所以还是个蛮大的工程，如果后面有兴趣就慢慢完善吧。因为不会，所以还没有搞帮助文档。）`gcj02`就是高德采用的坐标系，`wgs84`是我们要转换成的通用坐标系,`matrix_matrix`分别是输入和输出的数据类型。这个包里所有的函数基本上都是这个命名规则。
+
+*  生成地理空间对象**sf**包。它是**sp**包的升级换代，相比于传统的**sp**包属性层和地理空间信息层分隔的复杂存储方法，**sf**包就是基于数据框的，非常便于在R语言中进行操作，也是更加主流的GIS数据存储方式。由于目前得到了ggplot2的支持，专门加了一个对象`geom_sf`用于**sf**对象的作图，所以目前看来前途非常光明啊。
 这里可以再看一下zj这个数据框，实际上只要把*polyline*这一列转换成**sf**对象必需的*sfc*列（也就是专门用于存储地理空间信息的列），整个zj数据框就可以定位为**sf**对象了，非常方便。`st_sfc(crs=4326)`这个命令就是用来转换*polyline*列的。转换完成后我们再看*polyline*列的属性
 ```{r polyline_attributes,echo=FALSE}
 attributes(zj$polyline)
 ```
 可以看到，已经附加了很多地理空间信息。
-不方便的地方在于，不同的地理空间对象类型（就是点、线面）所对应的*sfc*列对数据格式的要求不同而且比较严格，比如说我这里所采用的*multipolygon*这个对象，他只接受*list(list(matrix),list(matirx),......)*这种格式的数据,而这里的*matrix*是由坐标对构成的矩阵，所以也就是*matrix(c(lng1,lat2),c(lng2,lat3).....)*，是一个一维的矩阵，在R里面生成这样一个矩阵还是有点技巧的（基于列表的建议用`list.rbind`，基于数据框也就是两列经纬度数据的下面再说）。所以上手这个包还是有点门槛的，需要一定时间来熟悉。
+不方便的地方在于，不同的地理空间对象类型（就是点、线面）所对应的*sfc*列对数据格式的要求不同而且比较严格，比如说我这里所采用的*multipolygon*这个对象，他只接受*list(list(matrix),list(matirx),......)*这种格式的数据,而这里的*matrix*是由坐标对构成的矩阵，所以也就是*matrix(c(lng1,lat2),c(lng2,lat3).....)*，是一个一维的矩阵，在R里面生成这样一个矩阵还是有点技巧的，需要一定时间来熟悉这个包的特殊用法。
+
 ###成图
 最艰难的阶段已经过去啦，下面就是愉快的画图啦。加载**ggplot2**，一行命令就出图。
 ```{r ggplot_zj,fig.cap='浙江省行政区图'}
@@ -90,29 +95,39 @@ ggplot()+geom_sf(data=zj_sf)
 ```
 ###延伸
 通过以上的方法，我们可以一个行政区一个行政区的得到他们的边框，然后通过`rbind`得到更大区域的图了。然而，这样的方式是太low了。我们要充分利用R语言里的`apply`函数家族，一下子得到浙江省所有地级市的行政区图。直接上代码。
-```{r,echo=TRUE,message=FALSE}
-library(tidyverse)
-library(sf)
-library(rlist)
-library(httr)
-library(jsonlite)
-library(Rgctc2)
-zj_city<-zj %>% "["('districts') %>% '[['(1) %>% '[['(1) 
+```{r get_city_border,echo=TRUE,cache=TRUE}
 
-zj_city<-lapply(zj_city$adcode,get_location)  %>%
+zj_city<-zj %>% "["('districts') %>% '[['(1) %>% '[['(1)  #提取各城市adcode
+zj_city<-lapply(zj_city$adcode,get_location)  %>%         #利用lapply函数提取所有城市的地理信息
          list.map(districts) %>% 
          lapply(select,-districts) %>% 
          list.rbind
-zj_city$polyline<-zj_city$polyline %>% 
-                  str_split('\\|') %>% 
-                  lapply(str_split,';') %>% 
-                  lapply(lapply,str_split,',') %>%
-                  lapply(lapply,lapply,as.numeric) %>% 
-                  lapply(lapply,list.rbind) %>%
-                  lapply(lapply,gcj02_wgs84_matrix_matrix) %>% 
-                  lapply(lapply,list) %>%
-                  lapply(st_multipolygon) %>%st_sfc(crs=4326)
+zj_city$polyline <- zj_city$polyline %>%                    
+                    str_split('\\|') %>% 
+                    lapply(str_split,';') %>% 
+                    lapply(lapply,str_split,',') %>%
+                    lapply(lapply,lapply,as.numeric) %>% 
+                    lapply(lapply,list.rbind) %>%
+                    lapply(lapply,gcj02_wgs84_matrix_matrix) %>% 
+                    lapply(lapply,list) %>%
+                    lapply(st_multipolygon) %>%st_sfc(crs=4326)
 
-zj_city<-st_sf(zj_city)
+zj_city <- st_sf(zj_city)
 
 ```
+可以看出来，最后一段代码不过是又套了一层lapply而已。在这里我们先不着急出图，我们把各城市的名字标出来。位置就放在高德给出的城市中心位置，原汁原味吗。这里又要进行一下坐标的转换。
+```{r city_center,echo=TRUE}
+zj_city       <-zj_city$center %>% 
+                str_split(';') %>% 
+                lapply(str_split,',') %>% 
+                lapply(lapply,as.numeric) %>% 
+                lapply(list.rbind) %>% list.rbind %>% 
+                gcj02_wgs84_matrix_df %>%
+                bind_cols(zj_city)
+zj_city<-st_sf(zj_city)
+```
+我们来检验一下最终成果吧。
+```{r city_map,echo=TRUE,fig.cap='浙江省分市行政区划图'}
+library(showtext)
+showtext_auto()                  #由于ggplot2对中文支持不友好，这里需要加载一个显示中文的包
+ggplot() + geom_sf(data=zj_city) +geom_text(data=zj_city,aes(x=wgs84_lng,y=wgs84_lat,label=name))
