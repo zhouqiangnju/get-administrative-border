@@ -1,9 +1,11 @@
 ---
-title: "利用高德地图API生成行政区划�<be>"
-author: "周强"
-date: "2018�<b4>3�<88>15�<a5>"
+title: "鍒╃敤楂樺痉鍦板浘API鐢熸垚琛屾斂鍖哄垝鍥<be>"
+author: "鍛ㄥ�<b1>"
+date: "2018�<9e><b4>3�<88><88>15�<83><a5>"
 output:
-  pdf_document: default
+  pdf_document: 
+    latex_engine: xelatex
+  word_document: default
   html_document: default
 ---
 
