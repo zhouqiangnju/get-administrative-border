@@ -1,11 +1,14 @@
 ---
-title: "åˆ©ç”¨é«˜å¾·åœ°å›¾APIç”Ÿæˆè¡Œæ”¿åŒºåˆ’å›<be>"
-author: "å‘¨å¼º"
-date: "2018å¹<b4>3æœ<88>15æ—<a5>"
+title: "ÀûÓÃ¸ßµÂAPI×Ô¶¯Éú³ÉĞĞÕşÇø»®µØÍ¼"
+author: 'Ô¶¾ÙÔÆÖĞ'
+
 output:
-  html_document: default
-  pdf_document: 
+  pdf_document:
+    includes:
+      in_header: header.tex
+    keep_tex: yes   
     latex_engine: xelatex
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -25,7 +28,7 @@ library('tidyverse')
 library('rlist')
 library('Rgctc2',lib.loc='~/GitHub/R_coordination_transformation')
 library('sf')
-
+library('showtext')
 ```
 Ê×ÏÈ×ÔÈ»ÊÇĞ´×¥È¡ĞÅÏ¢µÄº¯Êı£¬ÀûÓÃ¸ßµÂµÄ¹Ù·½Ö¸ÄÏºÜÈİÒ×¸ã¶¨¡£
 ```{r get_location,echo=TRUE}
@@ -67,9 +70,7 @@ zj$polyline<-zj$polyline %>%
              '[['(1)%>% lapply(str_split,',') %>%     #ÒÔÉÏ¶Ô×Ö·û´®½øĞĞ·Ö¸ô£¬µÃµ½Ò»¸ö¶à²ãÇ¶Ì×µÄÁĞ±í            
              lapply(lapply,as.numeric) %>%      
              lapply(list.rbind)%>%                    #×ª»»Êı¾İÀàĞÍ£¬²¢ºÏ²¢ĞĞ£¬ĞÎ³ÉÈô¸É¾ØÕó¡£
-  
              lapply(gcj02_wgs84_matrix_matrix) %>%    #×ª»»Í¶Ó°×ø±êÏµ
-  
              lapply(list) %>% 
              st_multipolygon %>% st_sfc(crs=4326)     #½«polylineÁĞ¶¨ÒåÎªsfcÊôĞÔ
 zj_sf<-st_sf(zj)                                      #½«Õû¸özjÊı¾İ¿ò¶¨ÒåÎªsf¶ÔÏó
@@ -83,23 +84,23 @@ zj_sf<-st_sf(zj)                                      #½«Õû¸özjÊı¾İ¿ò¶¨ÒåÎªsf¶ÔÏ
 *  Éú³ÉµØÀí¿Õ¼ä¶ÔÏó**sf**°ü¡£ËüÊÇ**sp**°üµÄÉı¼¶»»´ú£¬Ïà±ÈÓÚ´«Í³µÄ**sp**°üÊôĞÔ²ãºÍµØÀí¿Õ¼äĞÅÏ¢²ã·Ö¸ôµÄ¸´ÔÓ´æ´¢·½·¨£¬**sf**°ü¾ÍÊÇ»ùÓÚÊı¾İ¿òµÄ£¬·Ç³£±ãÓÚÔÚRÓïÑÔÖĞ½øĞĞ²Ù×÷£¬Ò²ÊÇ¸ü¼ÓÖ÷Á÷µÄGISÊı¾İ´æ´¢·½Ê½¡£ÓÉÓÚÄ¿Ç°µÃµ½ÁËggplot2µÄÖ§³Ö£¬×¨ÃÅ¼ÓÁËÒ»¸ö¶ÔÏó`geom_sf`ÓÃÓÚ**sf**¶ÔÏóµÄ×÷Í¼£¬ËùÒÔÄ¿Ç°¿´À´Ç°Í¾·Ç³£¹âÃ÷°¡¡£
 ÕâÀï¿ÉÒÔÔÙ¿´Ò»ÏÂzjÕâ¸öÊı¾İ¿ò£¬Êµ¼ÊÉÏÖ»Òª°Ñ*polyline*ÕâÒ»ÁĞ×ª»»³É**sf**¶ÔÏó±ØĞèµÄ*sfc*ÁĞ£¨Ò²¾ÍÊÇ×¨ÃÅÓÃÓÚ´æ´¢µØÀí¿Õ¼äĞÅÏ¢µÄÁĞ£©£¬Õû¸özjÊı¾İ¿ò¾Í¿ÉÒÔ¶¨Î»Îª**sf**¶ÔÏóÁË£¬·Ç³£·½±ã¡£`st_sfc(crs=4326)`Õâ¸öÃüÁî¾ÍÊÇÓÃÀ´×ª»»*polyline*ÁĞµÄ¡£×ª»»Íê³ÉºóÎÒÃÇÔÙ¿´*polyline*ÁĞµÄÊôĞÔ
 ```{r polyline_attributes,echo=FALSE}
-attributes(zj$polyline)
+class(zj$polyline)
 ```
-¿ÉÒÔ¿´µ½£¬ÒÑ¾­¸½¼ÓÁËºÜ¶àµØÀí¿Õ¼äĞÅÏ¢¡£
-²»·½±ãµÄµØ·½ÔÚÓÚ£¬²»Í¬µÄµØÀí¿Õ¼ä¶ÔÏóÀàĞÍ£¨¾ÍÊÇµã¡¢ÏßÃæ£©Ëù¶ÔÓ¦µÄ*sfc*ÁĞ¶ÔÊı¾İ¸ñÊ½µÄÒªÇó²»Í¬¶øÇÒ±È½ÏÑÏ¸ñ£¬±ÈÈçËµÎÒÕâÀïËù²ÉÓÃµÄ*multipolygon*Õâ¸ö¶ÔÏó£¬ËûÖ»½ÓÊÜ*list(list(matrix),list(matirx),......)*ÕâÖÖ¸ñÊ½µÄÊı¾İ,¶øÕâÀïµÄ*matrix*ÊÇÓÉ×ø±ê¶Ô¹¹³ÉµÄ¾ØÕó£¬ËùÒÔÒ²¾ÍÊÇ*matrix(c(lng1,lat2),c(lng2,lat3).....)*£¬ÊÇÒ»¸öÒ»Î¬µÄ¾ØÕó£¬ÔÚRÀïÃæÉú³ÉÕâÑùÒ»¸ö¾ØÕó»¹ÊÇÓĞµã¼¼ÇÉµÄ£¬ĞèÒªÒ»¶¨Ê±¼äÀ´ÊìÏ¤Õâ¸ö°üµÄÌØÊâÓÃ·¨¡£
+¿ÉÒÔ¿´µ½ÒÑ¾­³ÉÎªsfcÁĞÁË¡£
 
-###³ÉÍ¼
+²»·½±ãµÄµØ·½ÔÚÓÚ£¬²»Í¬µÄµØÀí¿Õ¼ä¶ÔÏóÀàĞÍ£¨¾ÍÊÇµã¡¢ÏßÃæ£©Ëù¶ÔÓ¦µÄ*sfc*ÁĞ¶ÔÊı¾İ¸ñÊ½µÄÒªÇó²»Í¬¶øÇÒ±È½ÏÑÏ¸ñ£¬±ÈÈçËµÎÒÕâÀïËù²ÉÓÃµÄ*multipolygon*Õâ¸ö¶ÔÏó£¬ËûÖ»½ÓÊÜ*list(list(matrix),list(matirx),......)*ÕâÖÖ¸ñÊ½µÄÊı¾İ,¶øÕâÀïµÄ*matrix*ÊÇÓÉ×ø±ê¶Ô¹¹³ÉµÄ¾ØÕó£¬ËùÒÔÒ²¾ÍÊÇ*matrix(c(lng1,lat2),c(lng2,lat3).....)*£¬ÊÇÒ»¸öÒ»Î¬µÄ¾ØÕó£¬ÔÚRÀïÃæÉú³ÉÕâÑùÒ»¸ö¾ØÕó»¹ÊÇÓĞµã¼¼ÇÉµÄ£¬ĞèÒªÒ»¶¨Ê±¼äÀ´ÊìÏ¤Õâ¸ö°üµÄÌØÊâÓÃ·¨¡£
+### ³ÉÍ¼
 ×î¼èÄÑµÄ½×¶ÎÒÑ¾­¹ıÈ¥À²£¬ÏÂÃæ¾ÍÊÇÓä¿ìµÄ»­Í¼À²¡£¼ÓÔØ**ggplot2**£¬Ò»ĞĞÃüÁî¾Í³öÍ¼¡£
 ```{r ggplot_zj,fig.cap='Õã½­Ê¡ĞĞÕşÇøÍ¼'}
 library(ggplot2)
 ggplot()+geom_sf(data=zj_sf)
 ```
-###ÑÓÉì
+### ÑÓÉì
 Í¨¹ıÒÔÉÏµÄ·½·¨£¬ÎÒÃÇ¿ÉÒÔÒ»¸öĞĞÕşÇøÒ»¸öĞĞÕşÇøµÄµÃµ½ËûÃÇµÄ±ß¿ò£¬È»ºóÍ¨¹ı`rbind`µÃµ½¸ü´óÇøÓòµÄÍ¼ÁË¡£È»¶ø£¬ÕâÑùµÄ·½Ê½ÊÇÌ«lowÁË¡£ÎÒÃÇÒª³ä·ÖÀûÓÃRÓïÑÔÀïµÄ`apply`º¯Êı¼Ò×å£¬Ò»ÏÂ×ÓµÃµ½Õã½­Ê¡ËùÓĞµØ¼¶ÊĞµÄĞĞÕşÇøÍ¼¡£Ö±½ÓÉÏ´úÂë¡£
 ```{r get_city_border,echo=TRUE,cache=TRUE}
 
 zj_city<-zj %>% "["('districts') %>% '[['(1) %>% '[['(1)  #ÌáÈ¡¸÷³ÇÊĞadcode
-zj_city<-lapply(zj_city$adcode,get_location)  %>%         #ÀûÓÃlapplyº¯ÊıÌáÈ¡ËùÓĞ³ÇÊĞµÄµØÀíĞÅÏ¢
+zj_city<-lapply(zj_city$adcode,get_location)  %>%         #ÀûÓÃlapplyÌáÈ¡ËùÓĞ³ÇÊĞĞÅÏ¢       
          list.map(districts) %>% 
          lapply(select,-districts) %>% 
          list.rbind
@@ -112,9 +113,7 @@ zj_city$polyline <- zj_city$polyline %>%
                     lapply(lapply,gcj02_wgs84_matrix_matrix) %>% 
                     lapply(lapply,list) %>%
                     lapply(st_multipolygon) %>%st_sfc(crs=4326)
-
 zj_city <- st_sf(zj_city)
-
 ```
 ¿ÉÒÔ¿´³öÀ´£¬×îºóÒ»¶Î´úÂë²»¹ıÊÇÓÖÌ×ÁËÒ»²ãlapply¶øÒÑ¡£ÔÚÕâÀïÎÒÃÇÏÈ²»×Å¼±³öÍ¼£¬ÎÒÃÇ°Ñ¸÷³ÇÊĞµÄÃû×Ö±ê³öÀ´¡£Î»ÖÃ¾Í·ÅÔÚ¸ßµÂ¸ø³öµÄ³ÇÊĞÖĞĞÄÎ»ÖÃ£¬Ô­Ö­Ô­Î¶Âğ¡£ÕâÀïÓÖÒª½øĞĞÒ»ÏÂ×ø±êµÄ×ª»»¡£
 ```{r city_center,echo=TRUE}
@@ -125,10 +124,11 @@ zj_city       <-zj_city$center %>%
                 lapply(list.rbind) %>% list.rbind %>% 
                 gcj02_wgs84_matrix_df %>%
                 bind_cols(zj_city)
-zj_city<-st_sf(zj_city)
+zj_city       <-st_sf(zj_city)
 ```
 ÎÒÃÇÀ´¼ìÑéÒ»ÏÂ×îÖÕ³É¹û°É¡£
-```{r city_map,echo=TRUE,fig.cap='Õã½­Ê¡·ÖÊĞĞĞÕşÇø»®Í¼',message=FALSE}
-library(showtext)
-showtext_auto()                  #ÓÉÓÚggplot2¶ÔÖĞÎÄÖ§³Ö²»ÓÑºÃ£¬ÕâÀïĞèÒª¼ÓÔØÒ»¸öÏÔÊ¾ÖĞÎÄµÄ°ü
-ggplot() + geom_sf(data=zj_city) +geom_text(data=zj_city,aes(x=wgs84_lng,y=wgs84_lat,label=name))
+```{r city_map,echo=TRUE,fig.cap='Õã½­Ê¡·ÖÊĞĞĞÕşÇø»®Í¼',fig.showtext=TRUE,message=FALSE}
+showtext_begin()                  #ÓÉÓÚggplot2¶ÔÖĞÎÄÖ§³Ö²»ÓÑºÃ£¬ÕâÀïĞèÒª¼ÓÔØÒ»¸öÏÔÊ¾ÖĞÎÄµÄ°ü
+font_add('fzbs',regular='C:/Windows/Fonts/·½ÕıĞ¡±êËÎ_GBK.TTF')
+ggplot() + geom_sf(data=zj_city) +geom_text(data=zj_city,aes(x=wgs84_lng,y=wgs84_lat,label=name),family='fzbs')
+showtext_end()

@@ -24,8 +24,8 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{hyperref}
 \hypersetup{unicode=true,
-            pdftitle={鍒╃敤楂樺痉鍦板浘API鐢熸垚琛屾斂鍖哄垝鍥},
-            pdfauthor={鍛ㄥ己},
+            pdftitle={利用高德API自动生成行政区划地图},
+            pdfauthor={远举云中},
             pdfborder={0 0 0},
             breaklinks=true}
 \urlstyle{same}  % don't use monospace font for urls
@@ -38,37 +38,37 @@
 \usepackage{framed}
 \definecolor{shadecolor}{RGB}{248,248,248}
 \newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
-\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
 \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
 \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\ImportTok}[1]{#1}
-\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
 \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
-\newcommand{\BuiltInTok}[1]{#1}
-\newcommand{\ExtensionTok}[1]{#1}
-\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
-\newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
 \newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
 \newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \usepackage{graphicx,grffile}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -113,16 +113,16 @@
 }
 
 \setlength{\droptitle}{-2em}
-  \title{鍒╃敤楂樺痉鍦板浘API鐢熸垚琛屾斂鍖哄垝鍥}
+  \title{利用高德API自动生成行政区划地图}
   \pretitle{\vspace{\droptitle}\centering\huge}
   \posttitle{\par}
-  \author{鍛ㄥ己}
+  \author{远举云中}
   \preauthor{\centering\large\emph}
   \postauthor{\par}
-  \predate{\centering\large\emph}
-  \postdate{\par}
-  \date{2018骞3鏈\textless{}88\textgreater{}15鏃}
+  \date{}
+  \predate{}\postdate{}
 
+\usepackage{ctex}
 
 \begin{document}
 \maketitle
@@ -141,6 +141,7 @@
 \KeywordTok{library}\NormalTok{(}\StringTok{'rlist'}\NormalTok{)}
 \KeywordTok{library}\NormalTok{(}\StringTok{'Rgctc2'}\NormalTok{,}\DataTypeTok{lib.loc=}\StringTok{'~/GitHub/R_coordination_transformation'}\NormalTok{)}
 \KeywordTok{library}\NormalTok{(}\StringTok{'sf'}\NormalTok{)}
+\KeywordTok{library}\NormalTok{(}\StringTok{'showtext'}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -223,9 +224,7 @@
 \StringTok{             '[['}\NormalTok{(}\DecValTok{1}\NormalTok{)}\OperatorTok{%>%}\StringTok{ }\KeywordTok{lapply}\NormalTok{(str_split,}\StringTok{','}\NormalTok{) }\OperatorTok{%>%}\StringTok{     }\CommentTok{#以上对字符串进行分隔，得到一个多层嵌套的列表            }
 \StringTok{             }\KeywordTok{lapply}\NormalTok{(lapply,as.numeric) }\OperatorTok{%>%}\StringTok{      }
 \StringTok{             }\KeywordTok{lapply}\NormalTok{(list.rbind)}\OperatorTok{%>%}\StringTok{                    }\CommentTok{#转换数据类型，并合并行，形成若干矩阵。}
-\StringTok{  }
 \StringTok{             }\KeywordTok{lapply}\NormalTok{(gcj02_wgs84_matrix_matrix) }\OperatorTok{%>%}\StringTok{    }\CommentTok{#转换投影坐标系}
-\StringTok{  }
 \StringTok{             }\KeywordTok{lapply}\NormalTok{(list) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{             }\NormalTok{st_multipolygon }\OperatorTok{%>%}\StringTok{ }\KeywordTok{st_sfc}\NormalTok{(}\DataTypeTok{crs=}\DecValTok{4326}\NormalTok{)     }\CommentTok{#将polyline列定义为sfc属性}
 \NormalTok{zj_sf<-}\KeywordTok{st_sf}\NormalTok{(zj)                                      }\CommentTok{#将整个zj数据框定义为sf对象}
@@ -246,30 +245,13 @@
 \end{itemize}
 
 \begin{verbatim}
-## $class
-## [1] "sfc_MULTIPOLYGON" "sfc"             
-## 
-## $precision
-## [1] 0
-## 
-## $bbox
-##          xmin          ymin          xmax          ymax 
-## 118.023019231  27.044744711 122.945311212  31.180867236 
-## 
-## $crs
-## Coordinate Reference System:
-##   EPSG: 4326 
-##   proj4string: "+proj=longlat +datum=WGS84 +no_defs"
-## 
-## $n_empty
-## [1] 0
+## [1] "sfc_MULTIPOLYGON" "sfc"
 \end{verbatim}
 
-可以看到，已经附加了很多地理空间信息。
+可以看到已经成为sfc列了。
+
 不方便的地方在于，不同的地理空间对象类型（就是点、线面）所对应的\emph{sfc}列对数据格式的要求不同而且比较严格，比如说我这里所采用的\emph{multipolygon}这个对象，他只接受\emph{list(list(matrix),list(matirx),\ldots{}\ldots{})}这种格式的数据,而这里的\emph{matrix}是由坐标对构成的矩阵，所以也就是\emph{matrix(c(lng1,lat2),c(lng2,lat3)\ldots{}..)}，是一个一维的矩阵，在R里面生成这样一个矩阵还是有点技巧的，需要一定时间来熟悉这个包的特殊用法。
-
-\subsubsection{成图}
-
+\#\#\# 成图
 最艰难的阶段已经过去啦，下面就是愉快的画图啦。加载\textbf{ggplot2}，一行命令就出图。
 
 \begin{Shaded}
@@ -281,7 +263,7 @@
 
 \begin{figure}
 
-{\centering \includegraphics{利用高德地图API接口生成行政区划图_files/figure-latex/ggplot_zj-1} 
+{\centering \includegraphics{get_border_files/figure-latex/ggplot_zj-1} 
 
 }
 
@@ -308,7 +290,6 @@
 \StringTok{                    }\KeywordTok{lapply}\NormalTok{(lapply,gcj02_wgs84_matrix_matrix) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{                    }\KeywordTok{lapply}\NormalTok{(lapply,list) }\OperatorTok{%>%}
 \StringTok{                    }\KeywordTok{lapply}\NormalTok{(st_multipolygon) }\OperatorTok{%>%}\KeywordTok{st_sfc}\NormalTok{(}\DataTypeTok{crs=}\DecValTok{4326}\NormalTok{)}
-
 \NormalTok{zj_city <-}\StringTok{ }\KeywordTok{st_sf}\NormalTok{(zj_city)}
 \end{Highlighting}
 \end{Shaded}
@@ -324,7 +305,7 @@
 \StringTok{                }\KeywordTok{lapply}\NormalTok{(list.rbind) }\OperatorTok{%>%}\StringTok{ }\NormalTok{list.rbind }\OperatorTok{%>%}\StringTok{ }
 \StringTok{                }\NormalTok{gcj02_wgs84_matrix_df }\OperatorTok{%>%}
 \StringTok{                }\KeywordTok{bind_cols}\NormalTok{(zj_city)}
-\NormalTok{zj_city<-}\KeywordTok{st_sf}\NormalTok{(zj_city)}
+\NormalTok{zj_city       <-}\KeywordTok{st_sf}\NormalTok{(zj_city)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -332,33 +313,26 @@
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{library}\NormalTok{(showtext)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Loading required package: sysfonts
-\end{verbatim}
-
-\begin{verbatim}
-## Loading required package: showtextdb
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{showtext_auto}\NormalTok{()                  }\CommentTok{#由于ggplot2对中文支持不友好，这里需要加载一个显示中文的包}
-\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data=}\NormalTok{zj_city) }\OperatorTok{+}\KeywordTok{geom_text}\NormalTok{(}\DataTypeTok{data=}\NormalTok{zj_city,}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x=}\NormalTok{wgs84_lng,}\DataTypeTok{y=}\NormalTok{wgs84_lat,}\DataTypeTok{label=}\NormalTok{name))}
+\KeywordTok{showtext_begin}\NormalTok{()                  }\CommentTok{#由于ggplot2对中文支持不友好，这里需要加载一个显示中文的包}
+\KeywordTok{font_add}\NormalTok{(}\StringTok{'fzbs'}\NormalTok{,}\DataTypeTok{regular=}\StringTok{'C:/Windows/Fonts/方正小标宋_GBK.TTF'}\NormalTok{)}
+\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data=}\NormalTok{zj_city) }\OperatorTok{+}\KeywordTok{geom_text}\NormalTok{(}\DataTypeTok{data=}\NormalTok{zj_city,}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x=}\NormalTok{wgs84_lng,}\DataTypeTok{y=}\NormalTok{wgs84_lat,}\DataTypeTok{label=}\NormalTok{name),}\DataTypeTok{family=}\StringTok{'fzbs'}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{figure}
 
-{\centering \includegraphics{利用高德地图API接口生成行政区划图_files/figure-latex/city_map-1} 
+{\centering \includegraphics{get_border_files/figure-latex/city_map-1} 
 
 }
 
 \caption{浙江省分市行政区划图}\label{fig:city_map}
 \end{figure}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{showtext_end}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
 
 
 \end{document}

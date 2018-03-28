@@ -7,6 +7,7 @@ library('jsonlite')
 
 
 setwd('F:/Administrator/Documents/R/Mapproject/JSframe')
+js<-readRDS('js_sf.rds')
 options(digits=11)
 get_location<- function(address){
   key = '7c6b6c0d1b641f4aa9cdb7d2229ae728'
@@ -19,15 +20,11 @@ get_location<- function(address){
   city<-GET(url)%>% content(as="text",encoding="UTF-8") %>% fromJSON(flatten = TRUE)
   return(city)
 }
-zj<-get_location('�㽭ʡ')[['districts']]  %>% '['('districts') %>% '[['(1) %>% '[['(1)
-city_center <-zj$center %>% str_split(';') %>% lapply(str_split,',') %>% lapply(lapply,as.numeric) %>% 
-         lapply(list.rbind) %>% list.rbind %>% gcj02_wgs84_matrix_df
 
-sh<-get_location(310000) %>% '[['('districts')
-regulartable(sh,col_keys = names(sh))
-str(sh)
-ft <- flextable(mtcars)
-ft
+#单一行政区边界及中心
+js<-get_location('江苏省')[['districts']]  %>% '['('districts') %>% '[['(1) %>% '[['(1)
+
+
 js$polyline<-js$polyline %>% str_split('\\|') %>% lapply(str_split,';')%>% '[['(1)%>%
           lapply(str_split,',') %>% lapply(lapply,as.numeric) %>% lapply(list.rbind)%>%
           lapply(gcj02_wgs84_matrix_matrix) %>% lapply(list) %>% st_multipolygon %>% st_sfc(crs=4326)
@@ -36,15 +33,13 @@ js$center_lng_wgs84<-center[1]
 js$center_lat_wgs84<-center[2]
 js<-select(js,adcode,name,polyline,center,level,center_lng_wgs84,center_lat_wgs84)
 js.sf<-st_sf(js)
-js.sf<-readRDS('js_amap.rds')
-
 
 saveRDS(js.sf,'js_amap.rds')
 saveRDS(js_center.sf,'js_center.rds')
 
-#
+#行政区内所有行政单元行政中心
 js_districts<-js %>% select(districts) %>% '[['(1)
-names(js_districts)<-js$name
+
 district_center<-lapply(js_districts,select,-districts) %>% list.rbind
 town_center<-lapply(js_districts,select,districts) %>% lapply('[[',1) %>% lapply(lapply,select,-districts) %>%
              lapply(list.rbind) %>% list.rbind
@@ -53,20 +48,45 @@ js_center$center<-str_split(js_center$center,',') %>% lapply(as.numeric) %>% lis
         lapply(unlist) %>% lapply(st_point) %>% st_sfc(crs=4326)
 js_center<-cbind(js_center,center)
 js_center.sf<-st_sf(js_center)
+saveRDS(js_center,'js_center.rds')
+#行政区内所有下级单元行政区划边界
+admin<-get_location('025')[['districts']]  
+admin_city<-admin %>% "["('districts') %>% '[['(1) %>% '[['(1)  #提取各城市adcode
+admin_city<-lapply(admin_city$adcode,get_location)  %>%         #利用lapply提取所有城市信息       
+  list.map(districts) %>% 
+  lapply(select,-districts) %>% 
+  list.rbind
+admin_city$polyline <- admin_city$polyline %>%                    
+  str_split('\\|') %>% 
+  lapply(str_split,';') %>% 
+  lapply(lapply,str_split,',') %>%
+  lapply(lapply,lapply,as.numeric) %>% 
+  lapply(lapply,list.rbind) %>%
+  lapply(lapply,gcj02_wgs84_matrix_matrix) %>% 
+  lapply(lapply,list) %>%
+  lapply(st_multipolygon) %>%st_sfc(crs=4326)
 
-#
-js_city<-get_location('����')[['districts']] %>% "["('districts') %>% '[['(1) %>% '[['(1)
+admin_city       <-admin_city$center %>% 
+  str_split(';') %>% 
+  lapply(str_split,',') %>% 
+  lapply(lapply,as.numeric) %>% 
+  lapply(list.rbind) %>% list.rbind %>% 
+  gcj02_wgs84_matrix_df %>%
+  bind_cols(admin_city)
+admin_city       <-st_sf(admin_city)
+saveRDS(admin_city,'nj_town.rds')
 
-js_city<-lapply(js_city$adcode,get_location)  %>%list.map(districts) %>% lapply(select,-districts) %>% list.rbind
-js_city$polyline<-js_city$polyline %>% str_split('\\|') %>% lapply(str_split,';') %>% lapply(lapply,str_split,',') %>%
-          lapply(lapply,lapply,as.numeric) %>% lapply(lapply, list.rbind) %>%
-          lapply(lapply,gcj02_wgs84_matrix_matrix) %>% lapply(lapply,list) %>%
-          lapply(st_multipolygon) %>%st_sfc(crs=4326)
-js_city.sf<-st_sf(js_city)
-ggplot()+geom_sf(data=js_city.sf)
-saveRDS(js_city.sf,'js_city_sf.rds')
+ggplot()+geom_sf(data=admin_city) +geom_sf(data=nj_poi[which(nj_poi$大类=='餐饮服务'),])
+nj_poi<-read_rds('C:/Users/zhouq/Documents/R/map/20个城市的POI数据/POI数据整理城市/南京/CSV版本/nj_poi_sf.rds')
+library(showtext)
+font_add('fzfs', regular = '方正仿宋_GBK.TTF')
+showtext_auto()   
+
+ggplot()+geom_sf(data=js_city) +
+  geom_text(data=js_city,aes(x=wgs84_lng,y=wgs84_lat,label=name),family='fzfs')
+saveRDS(js_city,'js_city.rds') 
 #
-cn<-get_location('�й�')[['districts']]
+cn<-get_location('?й?')[['districts']]
 cn$polyline<-cn$polyline %>% str_split('\\|') %>% lapply(str_split,';')%>% '[['(1)%>%
   lapply(str_split,',') %>% lapply(lapply,as.numeric) %>% lapply(list.rbind)%>%
   lapply(gcj02_wgs84_matrix_matrix) %>% lapply(list) %>% st_multipolygon %>% st_sfc(crs=4326)
