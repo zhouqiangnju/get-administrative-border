@@ -19,7 +19,7 @@ get_location<- function(address){
   city<-GET(url)%>% content(as="text",encoding="UTF-8") %>% fromJSON(flatten = TRUE)
   return(city)
 }
-zj<-get_location('Õã½­Ê¡')[['districts']]  %>% '['('districts') %>% '[['(1) %>% '[['(1)
+zj<-get_location('?ã½­Ê¡')[['districts']]  %>% '['('districts') %>% '[['(1) %>% '[['(1)
 city_center <-zj$center %>% str_split(';') %>% lapply(str_split,',') %>% lapply(lapply,as.numeric) %>% 
          lapply(list.rbind) %>% list.rbind %>% gcj02_wgs84_matrix_df
 
@@ -55,7 +55,7 @@ js_center<-cbind(js_center,center)
 js_center.sf<-st_sf(js_center)
 
 #
-js_city<-get_location('½­ËÕ')[['districts']] %>% "["('districts') %>% '[['(1) %>% '[['(1)
+js_city<-get_location('????')[['districts']] %>% "["('districts') %>% '[['(1) %>% '[['(1)
 
 js_city<-lapply(js_city$adcode,get_location)  %>%list.map(districts) %>% lapply(select,-districts) %>% list.rbind
 js_city$polyline<-js_city$polyline %>% str_split('\\|') %>% lapply(str_split,';') %>% lapply(lapply,str_split,',') %>%
@@ -66,9 +66,10 @@ js_city.sf<-st_sf(js_city)
 ggplot()+geom_sf(data=js_city.sf)
 saveRDS(js_city.sf,'js_city_sf.rds')
 #
-cn<-get_location('ÖÐ¹ú')[['districts']]
+cn<-get_location('?Ð¹?')[['districts']]
 cn$polyline<-cn$polyline %>% str_split('\\|') %>% lapply(str_split,';')%>% '[['(1)%>%
   lapply(str_split,',') %>% lapply(lapply,as.numeric) %>% lapply(list.rbind)%>%
   lapply(gcj02_wgs84_matrix_matrix) %>% lapply(list) %>% st_multipolygon %>% st_sfc(crs=4326)
 cn.sf<-st_sf(cn)
 cn.sf<-select(cn.sf,-districts)
+
