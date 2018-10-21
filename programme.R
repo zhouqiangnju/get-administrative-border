@@ -1,10 +1,10 @@
 library(tidyverse)
 library(rlist)
-library(Rgctc2,lib.loc='~/GitHub/R_coordination_transformation')
+install.packages('Rgctc2',lib.loc='~/GitHub/R_coordination_transformation')
 library(sf)
 library('httr')
 library('jsonlite')
-
+library('Rgctc2')
 
 setwd('F:/Administrator/Documents/R/Mapproject/JSframe')
 js<-readRDS('js_sf.rds')
@@ -50,27 +50,27 @@ js_center<-cbind(js_center,center)
 js_center.sf<-st_sf(js_center)
 saveRDS(js_center,'js_center.rds')
 #行政区内所有下级单元行政区划边界
-admin<-get_location('025')[['districts']]  
+admin<-get_location('025')[['districts']]
 admin_city<-admin %>% "["('districts') %>% '[['(1) %>% '[['(1)  #提取各城市adcode
-admin_city<-lapply(admin_city$adcode,get_location)  %>%         #利用lapply提取所有城市信息       
-  list.map(districts) %>% 
-  lapply(select,-districts) %>% 
+admin_city<-lapply(admin_city$adcode,get_location)  %>%         #利用lapply提取所有城市信息
+  list.map(districts) %>%
+  lapply(select,-districts) %>%
   list.rbind
-admin_city$polyline <- admin_city$polyline %>%                    
-  str_split('\\|') %>% 
-  lapply(str_split,';') %>% 
+admin_city$polyline <- admin_city$polyline %>%
+  str_split('\\|') %>%
+  lapply(str_split,';') %>%
   lapply(lapply,str_split,',') %>%
-  lapply(lapply,lapply,as.numeric) %>% 
+  lapply(lapply,lapply,as.numeric) %>%
   lapply(lapply,list.rbind) %>%
-  lapply(lapply,gcj02_wgs84_matrix_matrix) %>% 
+  lapply(lapply,gcj02_wgs84_matrix_matrix) %>%
   lapply(lapply,list) %>%
   lapply(st_multipolygon) %>%st_sfc(crs=4326)
 
-admin_city       <-admin_city$center %>% 
-  str_split(';') %>% 
-  lapply(str_split,',') %>% 
-  lapply(lapply,as.numeric) %>% 
-  lapply(list.rbind) %>% list.rbind %>% 
+admin_city       <-admin_city$center %>%
+  str_split(';') %>%
+  lapply(str_split,',') %>%
+  lapply(lapply,as.numeric) %>%
+  lapply(list.rbind) %>% list.rbind %>%
   gcj02_wgs84_matrix_df %>%
   bind_cols(admin_city)
 admin_city       <-st_sf(admin_city)
@@ -80,11 +80,11 @@ ggplot()+geom_sf(data=admin_city) +geom_sf(data=nj_poi[which(nj_poi$大类=='餐
 nj_poi<-read_rds('C:/Users/zhouq/Documents/R/map/20个城市的POI数据/POI数据整理城市/南京/CSV版本/nj_poi_sf.rds')
 library(showtext)
 font_add('fzfs', regular = '方正仿宋_GBK.TTF')
-showtext_auto()   
+showtext_auto()
 
 ggplot()+geom_sf(data=js_city) +
   geom_text(data=js_city,aes(x=wgs84_lng,y=wgs84_lat,label=name),family='fzfs')
-saveRDS(js_city,'js_city.rds') 
+saveRDS(js_city,'js_city.rds')
 #
 cn<-get_location('?й?')[['districts']]
 cn$polyline<-cn$polyline %>% str_split('\\|') %>% lapply(str_split,';')%>% '[['(1)%>%
